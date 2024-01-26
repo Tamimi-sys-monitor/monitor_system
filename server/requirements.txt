@@ -1,0 +1,10 @@
+flask 
+flask-sqlalchemy
+flask-bcrypt
+python-dotenv
+flask-session
+redis
+pysnmp
+paho-mqtt
+Flask-MQTT
+Werkzeug==2.3.7

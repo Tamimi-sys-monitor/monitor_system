@@ -1,0 +1,10 @@
+1) after logging in -> server sets coockies called "session_id"    
+
+2) every time client makes a request -> server recieves that "client_id" 
+
+3) server will check for any session which refers to "session_id"
+
+4) if there is a session with that id -> authentificated / valid session / perform authentificated tasks
+
+sudo apt install mosquitto
+sudo systemctl status mosquitto

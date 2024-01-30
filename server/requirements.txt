@@ -8,3 +8,4 @@ pysnmp
 paho-mqtt
 Flask-MQTT
 Werkzeug==2.3.7
+opencage

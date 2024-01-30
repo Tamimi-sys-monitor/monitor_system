@@ -34,3 +34,10 @@ class AmbientTemperatureMQTT(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     temperature = db.Column(db.Float)
     timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+class WeatherData(db.Model):
+    __tablename__ = "weather_data"
+    id = db.Column(db.Integer, primary_key=True)
+    relative_humidity_2m = db.Column(db.Float)
+    wind_speed_10m = db.Column(db.Float)
+    timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)

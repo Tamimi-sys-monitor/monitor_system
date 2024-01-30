@@ -2,7 +2,7 @@ from flask import Flask ,request, session
 from flask import jsonify
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
-from models import SysInfo, db ,User,AmbientTemperatureHTTP,AmbientTemperatureMQTT
+from models import SysInfo, WeatherData, db ,User,AmbientTemperatureHTTP,AmbientTemperatureMQTT
 from config import ApplicationConfig
 from flask_session import Session
 from pysnmp.hlapi import getCmd, SnmpEngine, CommunityData, UdpTransportTarget, ContextData, ObjectType, ObjectIdentity,nextCmd
@@ -28,8 +28,8 @@ community = 'public'
 def get_snmp_data(oid):
     errorIndication, errorStatus, errorIndex, varBinds = next(
         getCmd(SnmpEngine(),
-               CommunityData('public'),  # Replace 'public' with your SNMP community string
-               UdpTransportTarget(('localhost', 161)),  # Replace with your SNMP server details
+               CommunityData('public'),  
+               UdpTransportTarget(('localhost', 161)),  
                ContextData(),
                ObjectType(ObjectIdentity(oid)))
     )
@@ -89,8 +89,6 @@ def get_disk_usage():
         return jsonify({"Error": "Failed to retrieve disk usage"}), 500
 
 
-
-# OIDs for the requested information
 memory_total_oid = "1.3.6.1.4.1.2021.4.5.0"  # UCD-SNMP-MIB::memTotalReal
 cpu_usage_oid = "1.3.6.1.4.1.2021.11.11.0"  # UCD-SNMP-MIB::ssCpuIdle
 
@@ -307,17 +305,79 @@ update_thread_http.start()
 update_thread_mqtt.start()
 
 
-##############
+########################## part 3 (weather stuff)
+
 import requests
 
+from opencage.geocoder import OpenCageGeocode
 
 
+OPENMETEO_API_URL = "https://api.open-meteo.com/v1/forecast"
+OPENCAGE_API_KEY = "86b966f0c301474597a47594d7b28441"  
+
+geocoder = OpenCageGeocode(OPENCAGE_API_KEY)
+
+@app.route('/humidity/windspeed', methods=['GET'])
+def get_weather():
+    city = request.args.get('city')
+
+    if not city:
+        return jsonify({'error': 'City parameter is missing'}), 400
+
+    try:
+        results = geocoder.geocode(city)
+        if results and len(results):
+            latitude = results[0]['geometry']['lat']
+            longitude = results[0]['geometry']['lng']
+        else:
+            return jsonify({'error': 'Could not find coordinates for the specified city'}), 404
+
+        params = {
+            'latitude': latitude,
+            'longitude': longitude,
+            'current': 'temperature_2m,wind_speed_10m',
+            'hourly': 'temperature_2m,relative_humidity_2m,wind_speed_10m'
+        }
+
+        response = requests.get(OPENMETEO_API_URL, params=params)
+        data = response.json()
+
+        if response.status_code == 200:
+          if response.status_code == 200:
+            current_wind_speed = data.get('current', {}).get('wind_speed_10m')
+            hourly_humidity = data.get('hourly', {}).get('relative_humidity_2m')
+            weather_data = WeatherData(
+                wind_speed_10m=current_wind_speed,
+                relative_humidity_2m=hourly_humidity[0]
+            )
+            db.session.add(weather_data)
+            db.session.commit()
+
+            return jsonify({'wind_speed_10m': current_wind_speed, 'relative_humidity_2m': hourly_humidity[0]}), 200
+        else:
+            return jsonify({'error': 'Failed to retrieve data from OpenMeteo API'}), response.status_code
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/weather/all', methods=['GET'])
+def get_all_weather_data():
+    try:
+
+        all_weather_data = WeatherData.query.all()
 
 
+        weather_data_list = []
+        for weather_data in all_weather_data:
+            weather_data_list.append({
+                'id': weather_data.id,
+                'wind_speed_10m': weather_data.wind_speed_10m,
+                'relative_humidity_2m': weather_data.relative_humidity_2m,
+                'timestamp': weather_data.timestamp
+            })
 
-
-
-
+        return jsonify({'weather_data': weather_data_list}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':

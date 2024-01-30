@@ -1,0 +1,16 @@
+    GET /disk/description: Retrieves disk descriptions via SNMP.
+    GET /disk/usage: Retrieves disk usage via SNMP.
+    GET /memory: Retrieves memory usage via SNMP.
+    GET /cpu: Retrieves CPU usage via SNMP.
+    GET /@me: Retrieves current user information.
+    POST /register: Registers a new user.
+    POST /login: Logs in a user.
+    GET /sysinfo: Retrieves system information.
+    GET /sysinfo/store: Fetches and stores system information.
+    GET /get_sysinfo: Fetches all stored system information.
+    GET /ambient_temperature_http: Retrieves ambient temperature from HTTP.
+    GET /ambient_temperature_mqtt: Retrieves ambient temperature from MQTT.
+    GET /ambient_temperature_http/all: Retrieves all ambient temperatures from HTTP.
+    GET /ambient_temperature_mqtt/all: Retrieves all ambient temperatures from MQTT.
+    GET /humidity/windspeed: Retrieves humidity and wind speed for a given city.
+    GET /weather/all: Retrieves all stored weather data.

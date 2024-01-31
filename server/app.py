@@ -178,7 +178,7 @@ def getSysInfo():
         })
 
 
-@app.route("/sysinfo/store", methods=["GET"])
+@app.route("/sysinfo/store", methods=["GET"]) 
 def get_and_store_sysinfo():
     url = "http://127.0.0.1:5002/sysinfo"
     response = requests.get(url)
